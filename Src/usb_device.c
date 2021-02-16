@@ -35,7 +35,9 @@ void pcan_usb_device_init(void)
 
 void pcan_usb_device_poll( void )
 {
+#if ( USB_WITHOUT_ISR == 0 )
   HAL_PCD_IRQHandler( &hpcd_USB_OTG_HS );
+#endif
 }
 
 uint16_t pcan_usb_frame_number( void )
@@ -52,6 +54,19 @@ int pcan_flush_ep( uint8_t ep )
 
   p_data->ep_tx_in_use[ep&0x0F] = 0;
   return USBD_LL_FlushEP( pdev, ep ) == USBD_OK;
+}
+
+int pcan_data_trasmit( uint8_t ep, void *src, int size )
+{
+  USBD_HandleTypeDef *pdev = &hUsbDeviceHS;
+  struct t_class_data *p_data = (void*)pdev->pClassData;
+
+  assert( p_data->ep_tx_in_use[ep & 0x0F] == 0 );
+
+  p_data->ep_tx_in_use[ep & 0x0F] = 1;
+  pdev->ep_in[ep & EP_ADDR_MSK].total_length = size;
+
+  return USBD_LL_Transmit( pdev, ep, src, size ) == USBD_OK;
 }
 
 int pcan_flush_data( struct t_m2h_fsm *pfsm, void *src, int size )

@@ -4,6 +4,9 @@
 #include "usbd_conf.h"
 #include "usbd_helper.h"
 #include "pcanpro_protocol.h"
+#if ( INCLUDE_LIN_INTERFACE == 1 )
+#include "plin_protocol.h"
+#endif
 #include "pcanpro_usbd.h"
 
 static struct t_class_data pcanpro_data = { 0 };
@@ -219,7 +222,7 @@ static uint8_t device_init( USBD_HandleTypeDef *pdev, uint8_t cfgidx )
   for( int i = 0; i < pcanpro_dev.if0.bNumEndpoints; i++ )
   {
     uint8_t ep_addr = p_ep[i].bEndpointAddress;
-    
+
     if( p_ep[i].bmAttributes == USB_ENDPOINT_TYPE_BULK )
     {
       if( pdev->dev_speed == USBD_SPEED_FULL )
@@ -239,7 +242,35 @@ static uint8_t device_init( USBD_HandleTypeDef *pdev, uint8_t cfgidx )
     else
       pdev->ep_out[ep_addr & EP_ADDR_MSK].is_used = 1;
   }
+
+#if ( INCLUDE_LIN_INTERFACE == 1 )
+  p_ep = &pcanpro_dev.ep1_i1;
+
+  for( int i = 0; i < pcanpro_dev.if1.bNumEndpoints; i++ )
+  {
+    uint8_t ep_addr = p_ep[i].bEndpointAddress;
+ 
+    if( p_ep[i].bmAttributes == USB_ENDPOINT_TYPE_BULK )
+    {
+      if( pdev->dev_speed == USBD_SPEED_FULL )
+        p_ep[i].wMaxPacketSize = PCAN_FS_MAX_BULK_PACKET_SIZE;
+      else if( pdev->dev_speed == USBD_SPEED_HIGH )
+        p_ep[i].wMaxPacketSize = PCAN_HS_MAX_BULK_PACKET_SIZE;
+      else
+        assert( 0 );
+    }
     
+    USBD_LL_OpenEP( pdev, ep_addr,
+                          p_ep[i].bmAttributes,
+                          p_ep[i].wMaxPacketSize );
+    
+    if( ( ep_addr & 0x80 ) != 0 )
+      pdev->ep_in[ep_addr & EP_ADDR_MSK].is_used = 1;
+    else
+      pdev->ep_out[ep_addr & EP_ADDR_MSK].is_used = 1;
+  }
+#endif
+
   pdev->pClassData = (void*)&pcanpro_data;
 
 
@@ -247,6 +278,11 @@ static uint8_t device_init( USBD_HandleTypeDef *pdev, uint8_t cfgidx )
   USBD_LL_PrepareReceive( pdev, PCAN_USB_EP_MSGOUT_CH1, pcanpro_data.data1_ep_buffer, sizeof( pcanpro_data.data1_ep_buffer ) );
   USBD_LL_PrepareReceive( pdev, PCAN_USB_EP_MSGOUT_CH2, pcanpro_data.data2_ep_buffer, sizeof( pcanpro_data.data2_ep_buffer ) );
 
+#if ( INCLUDE_LIN_INTERFACE == 1 )
+  USBD_LL_PrepareReceive( pdev, PLIN_USB_EP_CMDOUT, pcanpro_data.lin_cmd, sizeof( pcanpro_data.lin_cmd ) );
+  USBD_LL_PrepareReceive( pdev, PLIN_USB_EP_MSGOUT_CH1, pcanpro_data.lin_data1, sizeof( pcanpro_data.lin_data1 ) );
+  USBD_LL_PrepareReceive( pdev, PLIN_USB_EP_MSGOUT_CH2, pcanpro_data.lin_data2, sizeof( pcanpro_data.lin_data2 ) );
+#endif
   return USBD_OK;
 }
 
@@ -257,6 +293,7 @@ static uint8_t device_deinit( USBD_HandleTypeDef *pdev, uint8_t cfgidx )
   for( int i = 0; i < pcanpro_dev.if0.bNumEndpoints; i++ )
   {
     uint8_t ep_addr = p_ep[i].bEndpointAddress;
+
     USBD_LL_FlushEP( pdev, ep_addr );
     USBD_LL_CloseEP( pdev, ep_addr );
     if( ( ep_addr & 0x80 ) != 0 )
@@ -264,6 +301,22 @@ static uint8_t device_deinit( USBD_HandleTypeDef *pdev, uint8_t cfgidx )
     else
       pdev->ep_out[ep_addr & EP_ADDR_MSK].is_used = 0;
   }
+
+#if ( INCLUDE_LIN_INTERFACE == 1 )
+  p_ep = &pcanpro_dev.ep1_i1;
+
+  for( int i = 0; i < pcanpro_dev.if1.bNumEndpoints; i++ )
+  {
+    uint8_t ep_addr = p_ep[i].bEndpointAddress;
+
+    USBD_LL_FlushEP( pdev, ep_addr );
+    USBD_LL_CloseEP( pdev, ep_addr );
+    if( ( ep_addr & 0x80 ) != 0 )
+      pdev->ep_in[ep_addr & EP_ADDR_MSK].is_used = 0;
+    else
+      pdev->ep_out[ep_addr & EP_ADDR_MSK].is_used = 0;
+  }
+  #endif
   
   pdev->pClassData = (void*)0;
 #if 0
@@ -338,24 +391,38 @@ static uint8_t device_data_out( USBD_HandleTypeDef *pdev, uint8_t epnum )
   
   size = USBD_LL_GetRxDataSize( pdev, epnum );
 
-  if( epnum == PCAN_USB_EP_CMDOUT )
+  switch( epnum )
   {
-    pcan_protocol_process_data( epnum, pcanpro_data.cmd_ep_buffer, size );
-    USBD_LL_PrepareReceive( pdev, epnum, pcanpro_data.cmd_ep_buffer, sizeof( pcanpro_data.cmd_ep_buffer ) );
-  }
-  else if( epnum == PCAN_USB_EP_MSGOUT_CH1 )
-  {
-    pcan_protocol_process_data( epnum, pcanpro_data.data1_ep_buffer, size );
-    USBD_LL_PrepareReceive( pdev, epnum, pcanpro_data.data1_ep_buffer, sizeof( pcanpro_data.data1_ep_buffer ) );
-  }
-  else if( epnum == PCAN_USB_EP_MSGOUT_CH2 )
-  {
-    pcan_protocol_process_data( epnum, pcanpro_data.data2_ep_buffer, size );
-    USBD_LL_PrepareReceive( pdev, epnum, pcanpro_data.data2_ep_buffer, sizeof( pcanpro_data.data2_ep_buffer ) );
-  }
-  else
-  {
-    return USBD_FAIL;
+    /* CAN DATA */
+    case PCAN_USB_EP_CMDOUT:
+      pcan_protocol_process_data( epnum, pcanpro_data.cmd_ep_buffer, size );
+      USBD_LL_PrepareReceive( pdev, epnum, pcanpro_data.cmd_ep_buffer, sizeof( pcanpro_data.cmd_ep_buffer ) );
+    break;
+    case PCAN_USB_EP_MSGOUT_CH1:
+      pcan_protocol_process_data( epnum, pcanpro_data.data1_ep_buffer, size );
+      USBD_LL_PrepareReceive( pdev, epnum, pcanpro_data.data1_ep_buffer, sizeof( pcanpro_data.data1_ep_buffer ) );
+    break;
+    case PCAN_USB_EP_MSGOUT_CH2:
+      pcan_protocol_process_data( epnum, pcanpro_data.data2_ep_buffer, size );
+      USBD_LL_PrepareReceive( pdev, epnum, pcanpro_data.data2_ep_buffer, sizeof( pcanpro_data.data2_ep_buffer ) );
+    break;
+#if ( INCLUDE_LIN_INTERFACE == 1 )
+    case PLIN_USB_EP_CMDOUT:
+      plin_protocol_process_cmd( pcanpro_data.lin_cmd, size );
+      USBD_LL_PrepareReceive( pdev, epnum, pcanpro_data.lin_cmd, sizeof( pcanpro_data.lin_cmd ) );
+    break;
+    case PLIN_USB_EP_MSGOUT_CH1:
+      plin_protocol_process_data( pcanpro_data.lin_data1, size, epnum );
+      USBD_LL_PrepareReceive( pdev, epnum, pcanpro_data.lin_data1, sizeof( pcanpro_data.lin_data1 ) );
+    break;
+    case PLIN_USB_EP_MSGOUT_CH2:
+      plin_protocol_process_data( pcanpro_data.lin_data2, size, epnum );
+      USBD_LL_PrepareReceive( pdev, epnum, pcanpro_data.lin_data2, sizeof( pcanpro_data.lin_data2 ) );
+    break;
+#endif
+    /* abnormal o_O */
+    default:
+      return USBD_FAIL;
   }
 
   return USBD_OK;

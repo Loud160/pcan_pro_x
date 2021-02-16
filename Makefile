@@ -38,6 +38,8 @@ Src/usbd_desc.c \
 Src/system_stm32f4xx.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd_ex.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32f4xx_ll_usart.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32f4xx_ll_rcc.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c \
@@ -58,6 +60,8 @@ Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c \
 Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c \
 Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c \
 Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c \
+Src/plin_protocol.c \
+Src/plin_lin.c \
 $(PROTO)
 
 # ASM sources
@@ -107,6 +111,7 @@ AS_DEFS =
 # C defines
 C_DEFS =  \
 -DUSE_HAL_DRIVER \
+-DUSE_FULL_LL_DRIVER \
 -DSTM32F407xx
 
 
@@ -154,16 +159,16 @@ LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BU
 all: pro pro_fd fd
 
 pro:
-	$(MAKE) BOARD=pro DEBUG=0 OPT=-Os PROTO=Src/pcanpro_protocol.c BOARD_FLAGS='-DPCAN_PRO=1 -DINCLUDE_LIN_INTERFACE=1' elf hex bin
+	$(MAKE) BOARD=pro DEBUG=0 OPT=-Os PROTO=Src/pcanpro_protocol.c BOARD_FLAGS='-DPCAN_PRO=1 -DINCLUDE_LIN_INTERFACE=1 -DUSB_WITHOUT_ISR=0' elf hex bin
 
 pro_fd:
-	$(MAKE) BOARD=pro_fd DEBUG=0 OPT=-Os PROTO=Src/pcanpro_fd_protocol.c BOARD_FLAGS='-DPCAN_PRO_FD=1 -DINCLUDE_LIN_INTERFACE=1' elf hex bin
+	$(MAKE) BOARD=pro_fd DEBUG=0 OPT=-Os PROTO=Src/pcanpro_fd_protocol.c BOARD_FLAGS='-DPCAN_PRO_FD=1 -DINCLUDE_LIN_INTERFACE=1 -DUSB_WITHOUT_ISR=0' elf hex bin
 
 fd:
-	$(MAKE) BOARD=fd DEBUG=0 OPT=-Os PROTO=Src/pcanpro_fd_protocol.c BOARD_FLAGS='-DPCAN_FD=1 -DINCLUDE_LIN_INTERFACE=0' elf hex bin
+	$(MAKE) BOARD=fd DEBUG=0 OPT=-Os PROTO=Src/pcanpro_fd_protocol.c BOARD_FLAGS='-DPCAN_FD=1 -DINCLUDE_LIN_INTERFACE=0 -DUSB_WITHOUT_ISR=1' elf hex bin
 
 pcan_x6:
-	$(MAKE) BOARD=pcan_x6 DEBUG=0 OPT=-Os PROTO=Src/pcanpro_fd_protocol.c BOARD_FLAGS='-DPCAN_X6=1 -DINCLUDE_LIN_INTERFACE=0' elf hex bin
+	$(MAKE) BOARD=pcan_x6 DEBUG=0 OPT=-Os PROTO=Src/pcanpro_fd_protocol.c BOARD_FLAGS='-DPCAN_X6=1 -DINCLUDE_LIN_INTERFACE=0 -DUSB_WITHOUT_ISR=1' elf hex bin
 
 
 #######################################

@@ -2,7 +2,10 @@
 #include <usbd_def.h>
 #include <usbd_core.h>
 
-#define USB_WITHOUT_ISR 1
+#ifndef USB_WITHOUT_ISR
+#error USB_WITHOUT_ISR not defined
+#endif
+
 PCD_HandleTypeDef hpcd_USB_OTG_HS;
 void Error_Handler(void);
 
@@ -229,10 +232,17 @@ USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef *pdev)
   
     HAL_PCDEx_SetRxFiFo( &hpcd_USB_OTG_HS, ((1024)/4)+1 );
 
-    HAL_PCDEx_SetTxFiFo( &hpcd_USB_OTG_HS, 0, (512/4)+1 );
-    HAL_PCDEx_SetTxFiFo( &hpcd_USB_OTG_HS, 1, (512/4)+1 );
-    HAL_PCDEx_SetTxFiFo( &hpcd_USB_OTG_HS, 2, (512/4)+1 );
-    HAL_PCDEx_SetTxFiFo( &hpcd_USB_OTG_HS, 3, (512/4)+1 );
+    HAL_PCDEx_SetTxFiFo( &hpcd_USB_OTG_HS, 0, (128/4)+1 );
+    HAL_PCDEx_SetTxFiFo( &hpcd_USB_OTG_HS, 1, (128/4)+1 );
+    HAL_PCDEx_SetTxFiFo( &hpcd_USB_OTG_HS, 2, (128/4)+1 );
+    HAL_PCDEx_SetTxFiFo( &hpcd_USB_OTG_HS, 3, (128/4)+1 );
+
+  /* LIN device */
+#if ( INCLUDE_LIN_INTERFACE == 1 )
+    HAL_PCDEx_SetTxFiFo( &hpcd_USB_OTG_HS, 4, (64/4)+1 );
+    HAL_PCDEx_SetTxFiFo( &hpcd_USB_OTG_HS, 5, (64/4)+1 );
+    HAL_PCDEx_SetTxFiFo( &hpcd_USB_OTG_HS, 6, (64/4)+1 );
+#endif
   }
   return USBD_OK;
 }

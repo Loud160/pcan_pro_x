@@ -14,4 +14,5 @@ void pcan_usb_device_init( void );
 void pcan_usb_device_poll( void );
 uint16_t pcan_usb_frame_number( void );
 int pcan_flush_ep( uint8_t ep );
+int pcan_data_trasmit( uint8_t ep, void *src, int size );
 int pcan_flush_data( struct t_m2h_fsm *pfsm, void *src, int size );

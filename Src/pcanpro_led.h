@@ -4,7 +4,9 @@
 enum e_pcan_led
 {
   LED_CH0_RX,
+  LED_LIN_LED0 = LED_CH0_RX,
   LED_CH1_RX,
+  LED_LIN_LED1 = LED_CH1_RX,
   LED_CH0_TX,
   LED_CH1_TX,
   LED_STAT,

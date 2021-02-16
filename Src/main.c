@@ -3,6 +3,9 @@
 #include "pcanpro_can.h"
 #include "pcanpro_led.h"
 #include "pcanpro_protocol.h"
+#if ( INCLUDE_LIN_INTERFACE == 1 )
+#include "plin_protocol.h"
+#endif
 #include "usb_device.h"
 
 void Error_Handler(void)
@@ -77,6 +80,9 @@ int main(void)
   
   pcan_led_init();
   pcan_protocol_init();
+#if ( INCLUDE_LIN_INTERFACE == 1 )
+  plin_protocol_init();
+#endif
   pcan_usb_device_init();
   
   for(;;)
@@ -85,5 +91,8 @@ int main(void)
     pcan_can_poll();
     pcan_protocol_poll();
     pcan_led_poll();
+#if ( INCLUDE_LIN_INTERFACE == 1 )
+    plin_protocol_poll();
+#endif
   }
 }

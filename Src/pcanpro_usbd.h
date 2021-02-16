@@ -15,7 +15,14 @@
 #define PCAN_USB_EP_MSGOUT_CH1    0x02
 #define PCAN_USB_EP_MSGIN_CH1     0x82
 #define PCAN_USB_EP_MSGOUT_CH2    0x03
-#define PCAN_USB_EP_MSGIN_CH2     0x83
+#define PCAN_USB_EP_MSGIN_CH2     0x83 /* UNUSED */
+
+#define PLIN_USB_EP_CMDOUT        0x04
+#define PLIN_USB_EP_CMDIN         0x84
+#define PLIN_USB_EP_MSGOUT_CH1    0x05
+#define PLIN_USB_EP_MSGIN_CH1     0x85
+#define PLIN_USB_EP_MSGOUT_CH2    0x06
+#define PLIN_USB_EP_MSGIN_CH2     0x86 /* UNUSED */
 
 
 #if ( PCAN_PRO_FD ) || ( PCAN_FD ) || ( PCAN_X6)
@@ -35,6 +42,11 @@ struct t_class_data
   uint8_t cmd_ep_buffer[PCAN_CMD_PACKET_SIZE];
   uint8_t data1_ep_buffer[PCAN_DATA_PACKET_SIZE];
   uint8_t data2_ep_buffer[PCAN_DATA_PACKET_SIZE];
+#if ( INCLUDE_LIN_INTERFACE == 1 )
+  uint8_t lin_cmd[PCAN_CMD_PACKET_SIZE];
+  uint8_t lin_data1[PCAN_DATA_PACKET_SIZE];
+  uint8_t lin_data2[PCAN_DATA_PACKET_SIZE];
+#endif
 };
 
 extern USBD_ClassTypeDef usbd_pcanpro;
