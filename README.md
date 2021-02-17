@@ -1,4 +1,4 @@
-# PEAK PCAN PRO/PRO FD firmware for STM32F4 based boards
+# PEAK PCAN PRO/PRO FD/FD/X6 firmware for STM32F4 based boards
 
 Target hardware:
 * Any STM32F407/405 based boards with 8MHz oscillator
@@ -11,6 +11,12 @@ Pinout:
 |PC6/PC7|TX/RX CAN2 LED|
 |PB8/PB9|CAN1 RX/TX|
 |PB5/PB6|CAN2 RX/TX|
+|PA10/PA9|LIN1 RX/TX|
+|PA1|LIN1 MASTER|
+|PA0|LIN1 SLEEP|
+|PD6/PD5|LIN2 RX/TX|
+|PA5|LIN2 MASTER|
+|PA4|LIN2 SLEEP|
 |PB14/PB15|USB DM/DP|
 
 Features:
