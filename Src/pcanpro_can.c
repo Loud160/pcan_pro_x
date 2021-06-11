@@ -15,7 +15,7 @@ static CAN_HandleTypeDef hcan[CAN_BUS_TOTAL] =
   [CAN_BUS_2].Instance = CAN2
 };
 
-#define CAN_TX_FIFO_SIZE (64)
+#define CAN_TX_FIFO_SIZE (256)
 static struct t_can_dev
 {
   void *dev;
@@ -319,7 +319,7 @@ int pcan_can_init_ex( int bus, uint32_t bitrate )
   /* do resend packets ! */
   p_can->Init.AutoRetransmission = DISABLE;
   p_can->Init.ReceiveFifoLocked = DISABLE;
-  p_can->Init.TransmitFifoPriority = DISABLE;
+  p_can->Init.TransmitFifoPriority = ENABLE;
   
   /* APB1 bus ref clock = 24MHz, best sp is 87.5% */
   _get_precalculated_bitrate( bitrate, &brp, &tseg1, &tseg2, &sjw );
@@ -719,6 +719,8 @@ void HAL_CAN_ErrorCallback( CAN_HandleTypeDef *hcan )
     pcan_can_tx_err( bus, 2 );
   }
   
+  HAL_CAN_AbortTxRequest( hcan, CAN_TX_MAILBOX0 | CAN_TX_MAILBOX1 | CAN_TX_MAILBOX2 );
+ 
   HAL_CAN_ResetError( hcan );
 }
 
