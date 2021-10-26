@@ -203,7 +203,7 @@ void pcan_ep0_receive( void )
     pcan_flush_ep( PCAN_USB_EP_MSGIN_CH1 );
     pcan_flush_ep( PCAN_USB_EP_CMDIN );
     pcan_device.can_drv_loaded = drv_load_packet[1];
-    pcan_led_set_mode( LED_STAT, LED_MODE_ON, 0 );
+    pcan_led_set_mode( LED_STAT, LED_MODE_BLINK_SLOW, 0xFFFFFFFF );
   }
   else
     pcan_device.lin_drv_loaded = drv_load_packet[1];
@@ -335,7 +335,7 @@ int pcan_protocol_tx_frame( struct ucan_tx_msg *pmsg )
     msg.flags |= MSG_FLAG_RTR;
   if( pmsg->flags & UCAN_MSG_EXT_ID )
     msg.flags |= MSG_FLAG_EXT;
-  if( pmsg->flags & (UCAN_MSG_API_SRR|UCAN_MSG_HW_SRR) )
+  if( pmsg->flags & (/*UCAN_MSG_API_SRR|*/UCAN_MSG_HW_SRR) )
   {
     msg.flags |= MSG_FLAG_ECHO;
     msg.dummy = pmsg->client;

@@ -79,6 +79,7 @@ int main(void)
   pcan_timestamp_init();
   
   pcan_led_init();
+  pcan_led_set_mode( LED_STAT, LED_MODE_BLINK_FAST, 0xFFFFFFFF );
   pcan_protocol_init();
 #if ( INCLUDE_LIN_INTERFACE == 1 )
   plin_protocol_init();

@@ -316,7 +316,7 @@ int pcan_can_init_ex( int bus, uint32_t bitrate )
   p_can->Init.TimeTriggeredMode = DISABLE;
   p_can->Init.AutoBusOff = ENABLE;
   p_can->Init.AutoWakeUp = ENABLE;
-  /* do resend packets ! */
+
   p_can->Init.AutoRetransmission = DISABLE;
   p_can->Init.ReceiveFifoLocked = DISABLE;
   p_can->Init.TransmitFifoPriority = ENABLE;
@@ -381,9 +381,11 @@ void pcan_can_set_bus_active( int bus, uint16_t mode )
   if( mode )
   {
     HAL_CAN_Start( p_can );
+    HAL_CAN_AbortTxRequest( p_can, CAN_TX_MAILBOX0 | CAN_TX_MAILBOX1 | CAN_TX_MAILBOX2 );
   }
   else
   {
+    HAL_CAN_AbortTxRequest( p_can, CAN_TX_MAILBOX0 | CAN_TX_MAILBOX1 | CAN_TX_MAILBOX2 );
     HAL_CAN_Stop( p_can );
   }
 }
